@@ -470,17 +470,7 @@ const Data = {
     const row = { user_id: this.user.id, name: fields.name, info: fields.info || "", note: fields.note || "",
       fu_stage: fields.fu_stage, fu_network: fields.fu_network || null, fu_source: fields.fu_source || null,
       fu_phase: 0, fu_msgs: 0, fu_log: [{ t: Date.now(), a: "add", s: fields.fu_stage }], fu_updated: new Date().toISOString() };
-    /* If AKTIV90 provides add_contact (the same thing its "+" does: contact + daily counter),
-       use it so the contact counts as new in AKTIV90 too. Otherwise insert the row directly. */
-    let data = null, error = null;
-    const r = !linked() ? { error: true } : await sb.rpc("add_contact", { p_name: row.name, p_info: row.info, p_note: row.note, p_fu_stage: row.fu_stage, p_fu_network: row.fu_network, p_fu_source: row.fu_source });
-    if (!r.error && r.data) {
-      const id = (Array.isArray(r.data) ? r.data[0] : r.data).id;
-      const upd = await sb.from("contacts").update({ fu_log: row.fu_log, fu_updated: row.fu_updated }).eq("id", id).select(COLS).single();
-      ({ data, error } = upd);
-    } else {
-      ({ data, error } = await sb.from("contacts").insert(row).select(COLS).single());
-    }
+    const { data, error } = await sb.from("contacts").insert(row).select(COLS).single();
     if (error || !data) { toast("Контактът не се записа. Опитай пак."); return null; }
     this.list.unshift({ ...data, fu_log: data.fu_log || [] });
     render();
