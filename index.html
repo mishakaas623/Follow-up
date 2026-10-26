@@ -323,8 +323,14 @@ details.more[open] summary { margin-bottom: 10px; }
    Базата и акаунтите са общи с AKTIV90 (Supabase проект aktiv90-run).
    Контактите са таблицата contacts; полетата на Follow Up започват с fu_.
    ===================================================================== */
+/* Two account systems:
+   - AKTIV90 (проект aktiv90-run): хората с акаунт в AKTIV90 влизат с него; контактите са общи с AKTIV90.
+   - Само Follow Up (собствен проект): акаунтите, създадени тук, нямат никаква връзка с AKTIV90.
+   Докато OWN_URL е празно, „Нов акаунт“ не се показва. */
 const SUPABASE_URL = "https://avyfzcevzmcknsidizuo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_ZwyTPjs0t8Eg6e-ESf6weA_WUQaKPUL";
+const OWN_URL = "";
+const OWN_KEY = "";
 /* Follow Up започва на чисто от тази дата: по-старите контакти от AKTIV90 не се показват тук
    (в AKTIV90 си остават). Показват се само по-новите и тези, които вече са в стълбицата. */
 const START_DAY = "2026-10-26";
@@ -429,7 +435,12 @@ const INFO_HINT = {
 };
 
 /* ---------- Data (Supabase) ---------- */
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+/* A password-reset link says which system it came from (?acc=a or ?acc=f). */
+const linkFrom = new URLSearchParams(location.search).get("acc");
+const sbA = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: linkFrom !== "f" } });
+const sbF = OWN_URL ? window.supabase.createClient(OWN_URL, OWN_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "followup-own-auth", detectSessionInUrl: linkFrom === "f" } }) : null;
+let sb = sbA;
+const linked = () => sb === sbA;
 const Data = {
   user: null, list: [], loaded: false,
   get(id) { const c = this.list.find(x => x.id === id); return c ? clone(c) : null; },
@@ -462,7 +473,7 @@ const Data = {
     /* If AKTIV90 provides add_contact (the same thing its "+" does: contact + daily counter),
        use it so the contact counts as new in AKTIV90 too. Otherwise insert the row directly. */
     let data = null, error = null;
-    const r = await sb.rpc("add_contact", { p_name: row.name, p_info: row.info, p_note: row.note, p_fu_stage: row.fu_stage, p_fu_network: row.fu_network, p_fu_source: row.fu_source });
+    const r = !linked() ? { error: true } : await sb.rpc("add_contact", { p_name: row.name, p_info: row.info, p_note: row.note, p_fu_stage: row.fu_stage, p_fu_network: row.fu_network, p_fu_source: row.fu_source });
     if (!r.error && r.data) {
       const id = (Array.isArray(r.data) ? r.data[0] : r.data).id;
       const upd = await sb.from("contacts").update({ fu_log: row.fu_log, fu_updated: row.fu_updated }).eq("id", id).select(COLS).single();
@@ -687,7 +698,7 @@ function renderMore() {
       <div class="actions"><a class="btn primary" id="gcal" href="${esc(gcalUrl(remind))}" target="_blank" rel="noopener">${I.link}Добави в Google Календар</a></div>
     </div>
     <div class="card"><h3>Профил</h3>
-      <p>Влязъл си като ${esc(Data.user && Data.user.email)}. Акаунтът и контактите са същите като в AKTIV90.</p>
+      <p>Влязъл си като ${esc(Data.user && Data.user.email)}. ${linked() ? "Акаунтът и контактите са същите като в AKTIV90." : "Акаунтът е само за Follow Up и няма връзка с AKTIV90."}</p>
       <div class="actions"><button class="btn" type="button" data-act="logout">Изход</button></div>
     </div>
   </div>`;
@@ -846,7 +857,7 @@ function renderContact() {
         <button class="btn primary" type="submit">Запази</button>
       </form>
       ${state.confirmDel
-        ? `<div class="confirm"><b>Да изтрия ли ${esc(c.name)}? Контактът изчезва и от AKTIV90.</b><div class="actions"><button class="btn danger" type="button" data-act="delete" data-id="${c.id}">Изтрий</button><button class="btn" type="button" data-act="nodel">Откажи</button></div></div>`
+        ? `<div class="confirm"><b>Да изтрия ли ${esc(c.name)}? ${linked() ? "Контактът изчезва и от AKTIV90." : ""}</b><div class="actions"><button class="btn danger" type="button" data-act="delete" data-id="${c.id}">Изтрий</button><button class="btn" type="button" data-act="nodel">Откажи</button></div></div>`
         : `<button class="btn ghost" type="button" data-act="askdel" style="color:var(--warn);justify-self:start">Изтрий контакта</button>`}
     </details>`;
 }
@@ -973,15 +984,15 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && Data.user) Data.load(); });
 
-/* ---------- Auth (same accounts as AKTIV90) ---------- */
+/* ---------- Auth ---------- */
 const auth = { mode: "login", msg: "", err: false, busy: false };
 function renderAuth() {
   const m = auth.mode;
   $("#authScreen").innerHTML = `<div class="wrap auth"><div class="box">
-    <div><h1>Follow <span>Up</span></h1><p>Подреди фолоуъпите си: Prospect → Interested → Close. Влизаш със същия акаунт като в AKTIV90.</p></div>
-    ${m !== "reset" ? `<div class="switch"><button type="button" data-auth="login" aria-pressed="${m === "login"}">Вход</button><button type="button" data-auth="signup" aria-pressed="${m === "signup"}">Нов акаунт</button></div>` : ""}
+    <div><h1>Follow <span>Up</span></h1><p>Подреди фолоуъпите си: Prospect → Interested → Close. Ако имаш акаунт в AKTIV90, влез с него.</p></div>
+    ${m !== "reset" && sbF ? `<div class="switch"><button type="button" data-auth="login" aria-pressed="${m === "login"}">Вход</button><button type="button" data-auth="signup" aria-pressed="${m === "signup"}">Нов акаунт</button></div>` : ""}
     <form id="authForm">
-      ${m === "signup" ? `<label class="field"><span>Име</span><input name="name" required autocomplete="name"></label>` : ""}
+      ${m === "signup" ? `<p class="hint">Акаунтът е само за Follow Up. Ако имаш акаунт в AKTIV90, не правиш нов, а влизаш с него.</p><label class="field"><span>Име</span><input name="name" required autocomplete="name"></label>` : ""}
       <label class="field"><span>Имейл</span><input name="email" type="email" required autocomplete="email"></label>
       ${m !== "reset" ? `<label class="field"><span>Парола</span><input name="password" type="password" required minlength="6" autocomplete="${m === "signup" ? "new-password" : "current-password"}"></label>` : ""}
       ${auth.msg ? `<div class="msg ${auth.err ? "err" : ""}">${esc(auth.msg)}</div>` : ""}
@@ -996,17 +1007,21 @@ document.addEventListener("click", e => {
 });
 async function authSubmit(f) {
   Object.assign(auth, { busy: true, msg: "", err: false }); renderAuth();
-  let res;
+  const back = (acc) => location.origin + location.pathname + "?acc=" + acc;
   if (auth.mode === "login") {
-    res = await sb.auth.signInWithPassword({ email: f.email, password: f.password });
+    let res = await sbA.auth.signInWithPassword({ email: f.email, password: f.password });
+    if (res.error && sbF) res = await sbF.auth.signInWithPassword({ email: f.email, password: f.password });
     if (res.error) Object.assign(auth, { msg: "Грешен имейл или парола.", err: true });
-  } else if (auth.mode === "signup") {
-    res = await sb.auth.signUp({ email: f.email, password: f.password, options: { data: { name: f.name } } });
+  } else if (auth.mode === "signup" && sbF) {
+    const res = await sbF.auth.signUp({ email: f.email, password: f.password, options: { data: { name: f.name }, emailRedirectTo: back("f") } });
     if (res.error) Object.assign(auth, { msg: /registered/i.test(res.error.message) ? "Този имейл вече има акаунт. Влез с него." : "Акаунтът не се създаде: " + res.error.message, err: true });
     else if (!res.data.session) Object.assign(auth, { mode: "login", msg: "Пратихме ти имейл. Потвърди адреса и после влез." });
   } else {
-    res = await sb.auth.resetPasswordForEmail(f.email, { redirectTo: location.origin + location.pathname });
-    Object.assign(auth, res.error ? { msg: "Не успях да пратя имейла. Опитай пак.", err: true } : { msg: "Пратихме ти линк за нова парола.", mode: "login" });
+    const [a, b] = await Promise.all([
+      sbA.auth.resetPasswordForEmail(f.email, { redirectTo: back("a") }),
+      sbF ? sbF.auth.resetPasswordForEmail(f.email, { redirectTo: back("f") }) : Promise.resolve({ error: true })
+    ]);
+    Object.assign(auth, a.error && b.error ? { msg: "Не успях да пратя имейла. Опитай пак.", err: true } : { msg: "Ако имейлът има акаунт, пратихме ти линк за нова парола.", mode: "login" });
   }
   auth.busy = false;
   if (!Data.user) renderAuth();
@@ -1024,10 +1039,22 @@ function showAuth() {
   $("#appScreen").hidden = true; $("#authScreen").hidden = false;
   renderAuth();
 }
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === "PASSWORD_RECOVERY") { setTimeout(newPasswordPrompt, 0); }
-  if (session && session.user) { if (!Data.user || Data.user.id !== session.user.id) showApp(session.user); }
-  else showAuth();
+/* AKTIV90 account wins if both are signed in. */
+const sessions = { a: null, f: null };
+function pickSession() {
+  const client = sessions.a ? sbA : sessions.f ? sbF : null;
+  const session = sessions.a || sessions.f;
+  if (!client) { showAuth(); return; }
+  if (sb !== client) { sb = client; Data.user = null; }
+  if (!Data.user || Data.user.id !== session.user.id) showApp(session.user);
+}
+[[sbA, "a"], [sbF, "f"]].forEach(([client, key]) => {
+  if (!client) return;
+  client.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY") { sb = client; setTimeout(newPasswordPrompt, 0); }
+    sessions[key] = session && session.user ? session : null;
+    pickSession();
+  });
 });
 function newPasswordPrompt() {
   $("#sheetBody").innerHTML = `<div class="grab"></div><div class="sheet-h"><h2 id="sheetTitle">Нова парола</h2></div>
