@@ -140,8 +140,7 @@ summary .csec-tag { margin-left: 0; }
 /* Timeline of the five messages in the current cycle */
 .tl { list-style: none; margin: 0; padding: 0; display: grid; }
 .tl li { position: relative; display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; font-size: 14px; color: var(--muted); }
-.tl li::before { content: ""; position: absolute; left: 11px; top: -6px; height: 12px; width: 2px; background: var(--line); }
-.tl li:first-child::before { display: none; }
+.tl li::before { content: ""; position: absolute; left: 11px; top: -8px; height: 14px; width: 2px; background: var(--line); }
 .tl .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; color: #fff; }
 .tl .dot svg { width: 14px; height: 14px; }
 .tl li.done { color: var(--ink); }
@@ -760,15 +759,12 @@ function renderContact() {
     const st = stepOf(c);
     const dates = cycleDates(c);
     if (st && !dates[st] && c.fu_last) dates[st] = c.fu_last;
-    const tl = `<ol class="tl">${STEPS.slice(1).map((n, i) => {
-      const k = i + 1, d = dates[k];
-      const cls = k <= st ? "done" : k === st + 1 ? "next" : "";
-      return `<li class="${cls}"><span class="dot">${k <= st ? I.check : ""}</span><span class="nm">${n}</span>
-        <span class="dt">${k <= st ? (d ? `${fmtShort(d)} · ${ago(d)}` : "пратен") : k === st + 1 ? "следва" : ""}</span></li>`;
-    }).join("")}</ol>`;
+    const d = dates[st];
+    const tl = st ? `<ol class="tl"><li class="done"><span class="dot">${I.check}</span><span class="nm">${STEPS[st]}</span>
+      <span class="dt">${d ? `${fmtShort(d)} · ${ago(d)}` : "пратен"}</span></li></ol>` : "";
     const nextText = st >= 2 && st < 5 ? (PHASES[c.fu_stage] || [])[st - 2] : "";
     const status = st === 0 ? "В разговор" : sent(st);
-    let body = `<p class="sub">${lastLine(c)[0].toUpperCase() + lastLine(c).slice(1)}${st && c.fu_next ? ` · ${c.fu_next <= today() ? "въпросът е за днес" : "ще те питам " + relDay(c.fu_next)}` : ""}</p>${tl}`;
+    let body = `${tl}<p class="sub">${st ? (c.fu_next ? (c.fu_next <= today() ? "Въпросът е за днес" : "Ще те питам " + relDay(c.fu_next)) : "") : lastLine(c)[0].toUpperCase() + lastLine(c).slice(1)}</p>`;
     if (st === 0) {
       body += `<div class="q-box">Отговаря ти. Когато спре и му пратиш 1-ви follow up, натисни бутона.</div>
         <button class="btn primary big" type="button" data-act="send" data-id="${c.id}">${I.send}Пратих 1-ви follow up</button>`;
