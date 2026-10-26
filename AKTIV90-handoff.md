@@ -57,39 +57,6 @@ await sb.from("contacts").insert({
 
 Записват се директно в `contacts` и се виждат в списъка на AKTIV90. Не се броят като „+“ (решено е да не се пипа броячът на AKTIV90).
 
-## Важно: в AKTIV90 тези избори само се записват
-
-- Не ги показвай никъде другаде в AKTIV90: нито в списъка с контакти, нито в картата на контакта, нито в отчетите.
-- Модулите на AKTIV90 (контактиран, поканен, изпратен и т.н., полето `done`) остават както са и нямат връзка с Follow Up.
-- След натискане на „+“ бутончетата се изчистват заедно с името и полето за профил.
-
-## Контакти, създадени във Follow Up: да се броят като „+“ в AKTIV90
-
-Когато някой добави контакт във Follow Up, той трябва да се отчете в AKTIV90 **точно както при натискане на „+“**
-(записът в `contacts` и всичко, което „+“ прави по дневния брояч в `days.counts`).
-
-Направи го с една функция в базата, която прави точно това, което прави „+“:
-
-```sql
-create or replace function public.add_contact(
-  p_name text, p_info text default '', p_note text default '',
-  p_fu_stage text default null, p_fu_network text default null, p_fu_source text default null
-) returns public.contacts
-language plpgsql security invoker set search_path = public as $$
-declare c public.contacts;
-begin
-  insert into public.contacts (user_id, name, info, note, fu_stage, fu_network, fu_source)
-  values (auth.uid(), p_name, coalesce(p_info, ''), coalesce(p_note, ''), p_fu_stage, p_fu_network, p_fu_source)
-  returning * into c;
-  -- ТУК: същото, което „+“ прави по days.counts за днешния ден (ако прави нещо)
-  return c;
-end $$;
-grant execute on function public.add_contact(text, text, text, text, text, text) to authenticated;
-```
-
-- Follow Up вече вика `add_contact`, ако я има; ако я няма, просто записва реда в `contacts` (тогава контактът се вижда в списъка на AKTIV90, но не се брои като „+“).
-- По желание и „+“ в AKTIV90 може да ползва същата функция — така логиката е на едно място.
-
 ## Какво да НЕ се прави
 
 - Не трий и не преименувай колоните `fu_*`.
