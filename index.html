@@ -326,11 +326,11 @@ details.more[open] summary { margin-bottom: 10px; }
 /* Two account systems:
    - AKTIV90 (проект aktiv90-run): хората с акаунт в AKTIV90 влизат с него; контактите са общи с AKTIV90.
    - Само Follow Up (собствен проект): акаунтите, създадени тук, нямат никаква връзка с AKTIV90.
-   Докато OWN_URL е празно, „Нов акаунт“ не се показва. */
+   „Нов акаунт“ винаги създава акаунт само тук. */
 const SUPABASE_URL = "https://avyfzcevzmcknsidizuo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_ZwyTPjs0t8Eg6e-ESf6weA_WUQaKPUL";
-const OWN_URL = "";
-const OWN_KEY = "";
+const OWN_URL = "https://yigceexmqonkgnxbbdxa.supabase.co";
+const OWN_KEY = "sb_publishable_zVUcmeEssh9tBgq8Yf1K8g_oB2A9iBa";
 /* Follow Up започва на чисто от тази дата: по-старите контакти от AKTIV90 не се показват тук
    (в AKTIV90 си остават). Показват се само по-новите и тези, които вече са в стълбицата. */
 const START_DAY = "2026-10-26";
@@ -1035,6 +1035,7 @@ function showApp(user) {
 }
 function showAuth() {
   Data.user = null; Data.list = []; Data.loaded = false;
+  if (auth.mode === "signup" && !auth.msg) auth.mode = "login";
   closeSheet();
   $("#appScreen").hidden = true; $("#authScreen").hidden = false;
   renderAuth();
