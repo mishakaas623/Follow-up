@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Follow Up</title>
+<meta name="theme-color" content="#0a6c87">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Follow Up">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@700&display=swap">
+<style>
+/* Layout: phone-first app — sticky header, one scrolling view, bottom tab bar, bottom sheet for a contact. */
+:root {
+  --bg: #eef3f4; --surface: #ffffff; --surface-2: #f5f8f9; --ink: #0f2531; --muted: #5a6e78; --line: #d9e3e7;
+  --accent: #0a6c87; --accent-soft: #dcedf2; --on-accent: #ffffff;
+  --st-prospect: #66788f; --st-interested: #0a6c87; --st-close: #b05e14; --st-client: #2d7a4c; --st-later: #7a6a9c; --st-lost: #8a8f93;
+  --warn: #b7372a; --warn-soft: #f8e3df;
+  --shadow: 0 1px 2px rgba(15,37,49,.06), 0 6px 20px rgba(15,37,49,.06);
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --nav-h: 64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b161c; --surface: #12212a; --surface-2: #0f1c23; --ink: #e4edf0; --muted: #8ea2ac; --line: #22343e;
+    --accent: #4fb2cf; --accent-soft: #143642; --on-accent: #06222b;
+    --st-prospect: #93a3b8; --st-interested: #4fb2cf; --st-close: #e09a55; --st-client: #5fbf86; --st-later: #a796cc; --st-lost: #8c959b;
+    --warn: #ef7b6b; --warn-soft: #3a1d19; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #0b161c; --surface: #12212a; --surface-2: #0f1c23; --ink: #e4edf0; --muted: #8ea2ac; --line: #22343e;
+    --accent: #4fb2cf; --accent-soft: #143642; --on-accent: #06222b;
+    --st-prospect: #93a3b8; --st-interested: #4fb2cf; --st-close: #e09a55; --st-client: #5fbf86; --st-later: #a796cc; --st-lost: #8c959b;
+    --warn: #ef7b6b; --warn-soft: #3a1d19; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
+.top .wrap { padding-block: 14px 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
+.brand span { color: var(--accent); }
+.today-date { color: var(--muted); font-size: 13px; }
+main { padding-bottom: calc(var(--nav-h) + 96px + env(safe-area-inset-bottom, 0px)); }
+.view { display: grid; gap: 18px; padding-block: 6px 0; }
+.view.today { gap: 44px; }
+.view.today .tiles + * { margin-top: -14px; }
+
+/* Today: summary cards that jump to their block */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { display: grid; gap: 2px; align-content: start; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; color: var(--ink); }
+.tile.main { grid-column: 1 / -1; grid-template-columns: auto 1fr; column-gap: 16px; align-items: center; }
+.tile .n { font-family: var(--font-body); font-weight: 700; font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile.main .n { grid-row: span 2; font-size: 40px; min-width: 44px; text-align: center; padding-right: 16px; border-right: 1px solid var(--line); }
+.tile .t { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+.tile .t::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--tc); flex: none; }
+.tile .s { font-size: 13px; color: var(--muted); }
+.tile.zero .n { color: var(--muted); font-weight: 600; }
+
+/* Today: one block per kind of work */
+.block { display: grid; gap: 10px; }
+.block-h { display: flex; align-items: center; gap: 10px; padding-left: 12px; border-left: 5px solid var(--bc); }
+.block-h h2 { margin: 0; font-size: 23px; font-weight: 700; line-height: 1.2; }
+.block .row { border-left-color: var(--bc); }
+.count { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 14px; background: var(--bc, var(--muted)); color: #fff; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.block-note { margin: 0 0 2px; font-size: 13.5px; color: var(--muted); }
+details.block > summary { cursor: pointer; list-style: none; }
+details.block > summary::-webkit-details-marker { display: none; }
+.block-h .toggle { margin-left: auto; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); }
+.block-h .toggle::before { content: ""; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateY(2px) rotate(-135deg); }
+details.block:not([open]) .block-h .toggle::before { transform: translateY(-2px) rotate(45deg); }
+details.block[open] > summary { margin-bottom: 10px; }
+
+/* Contact: ordinary follow-ups before the phases */
+.pre-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.pre-steps span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; border: 1px dashed var(--line); font-size: 12.5px; color: var(--muted); }
+.pre-steps span svg { width: 14px; height: 14px; }
+.pre-steps span.on { border-style: solid; border-color: var(--stc); color: var(--ink); }
+.pre-steps span.next { border-style: solid; border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.linkish.small { font-size: 13px; }
+
+.sec { display: grid; gap: 8px; }
+.sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sec-h h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.list { display: grid; gap: 8px; }
+
+.row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; background: var(--surface); border-radius: 14px; padding: 12px 12px 12px 14px; box-shadow: var(--shadow); border-left: 4px solid var(--stc, var(--line)); }
+.row.overdue { background: linear-gradient(90deg, var(--warn-soft), var(--surface) 55%); }
+.row-main { min-width: 0; background: none; border: 0; padding: 0; text-align: left; display: grid; gap: 4px; }
+.row-name { font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row-line { display: grid; gap: 1px; font-size: 13px; color: var(--muted); }
+.row-line span:first-child:not(.bad) { color: var(--ink); }
+.row-line .q { font-size: 15px; font-weight: 600; margin: 2px 0; }
+.row.stacked { grid-template-columns: 1fr; }
+.row-btns { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.row-btns.one { grid-template-columns: 1fr; }
+.row-tools { display: flex; flex-wrap: wrap; gap: 4px; margin: -4px 0 -6px; }
+.row-tools .btn { color: var(--muted); padding: 0 7px; font-size: 12.5px; min-height: 32px; border-color: transparent; gap: 4px; }
+.row-tools .btn svg { width: 15px; height: 15px; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.panel .ask { font-size: 16px; font-weight: 600; }
+.block > .list, .block > .block-note { margin-top: 0; }
+details.block { display: block; }
+details.block > .block-note { margin-bottom: 10px; }
+
+/* Contact sheet: one white card per section on the grey sheet */
+.csec { background: var(--surface); border-radius: 16px; padding: 14px 14px 16px; display: grid; gap: 12px; box-shadow: var(--shadow); }
+details.csec { display: block; }
+details.csec[open] > summary { margin-bottom: 12px; }
+details.csec > :not(summary) + :not(summary) { margin-top: 12px; }
+.csec-h { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; padding-left: 10px; border-left: 4px solid var(--sc, var(--line)); }
+summary.csec-h { cursor: pointer; list-style: none; }
+summary.csec-h::-webkit-details-marker { display: none; }
+summary.csec-h::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-right: 6px; }
+details[open] > summary.csec-h::after { transform: rotate(-135deg); }
+.csec-tag { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+summary .csec-tag { margin-left: 0; }
+.csec .sub { margin: 0; font-size: 13.5px; color: var(--muted); }
+.q-box { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 16px; font-weight: 600; line-height: 1.35; }
+.q-box.late { border-color: var(--warn); }
+
+/* Timeline of the five messages in the current cycle */
+.tl { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl li { position: relative; display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; font-size: 14px; color: var(--muted); }
+.tl li::before { content: ""; position: absolute; left: 11px; top: -6px; height: 12px; width: 2px; background: var(--line); }
+.tl li:first-child::before { display: none; }
+.tl .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; color: #fff; }
+.tl .dot svg { width: 14px; height: 14px; }
+.tl li.done { color: var(--ink); }
+.tl li.done .dot { background: var(--sc); border-color: var(--sc); }
+.tl li.done::before { background: var(--sc); }
+.tl li.next .dot { border-color: var(--sc); }
+.tl li.next .nm { color: var(--ink); font-weight: 600; }
+.tl .nm { font-weight: 500; }
+.tl .dt { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.tl li.done .dt { color: var(--muted); }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; font-size: 13px; padding: 7px 0; border-top: 1px solid var(--line); }
+.history li:first-child { border-top: 0; }
+.history li time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.bad { color: var(--warn); font-weight: 600; }
+.chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 500; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); white-space: nowrap; }
+.chip.st { border-color: transparent; color: #fff; background: var(--stc); }
+.dots { display: inline-flex; gap: 3px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--stc, var(--accent)); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; text-align: center; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.go { background: var(--st-client); border-color: var(--st-client); color: #fff; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--warn); border-color: var(--warn); background: transparent; }
+.btn.icon { width: 42px; padding: 0; }
+.btn.small { min-height: 34px; padding: 0 10px; font-size: 13px; }
+.btn.big { min-height: 50px; font-size: 15px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; justify-items: start; }
+.empty p { margin: 0; color: var(--muted); }
+.empty h3 { margin: 0; font-size: 16px; }
+.note-box { padding: 14px; border-radius: 14px; background: var(--surface); color: var(--muted); font-size: 14px; }
+
+/* Ladder */
+.ladder { display: grid; }
+.rung { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; background: var(--surface); border: 2px solid transparent; border-radius: 14px; padding: 12px 14px; text-align: left; box-shadow: var(--shadow); }
+.rung.box { grid-template-columns: 1fr auto; }
+.rung[aria-expanded="true"] { border-color: var(--stc); }
+.rung .bar { width: 6px; align-self: stretch; border-radius: 4px; background: var(--stc); }
+.rung .t { display: grid; gap: 1px; min-width: 0; }
+.rung .t b { font-weight: 700; font-size: 16px; }
+.rung .t small { color: var(--muted); font-size: 12.5px; }
+.rung .num { font-family: var(--font-display); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; color: var(--stc); }
+.arrow { display: flex; justify-content: center; height: 22px; color: var(--accent); }
+.arrow svg { width: 22px; height: 22px; }
+.boxes { gap: 10px; }
+.acc { display: grid; gap: 8px; }
+.acc-list { padding: 2px 0 6px 10px; border-left: 3px solid var(--line); margin-left: 8px; }
+.search { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 0 14px; }
+
+.card { background: var(--surface); border-radius: 14px; padding: 16px; display: grid; gap: 10px; box-shadow: var(--shadow); }
+.card h3 { margin: 0; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.table { display: grid; gap: 6px; }
+.table-row { display: grid; grid-template-columns: 1fr 52px 70px; gap: 8px; font-size: 14px; align-items: center; }
+.table-row span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.table-row.h { font-size: 12px; color: var(--muted); }
+
+/* Nav */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav .in { max-width: 640px; margin: 0 auto; height: var(--nav-h); display: grid; grid-template-columns: repeat(3, 1fr); }
+.tab { background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 2px; color: var(--muted); font-size: 12px; font-weight: 500; position: relative; }
+.tab svg { width: 22px; height: 22px; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab .badge { position: absolute; top: 8px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--warn); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.fab { position: fixed; z-index: 7; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); height: 54px; padding: 0 20px 0 16px; border-radius: 27px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(10,108,135,.35); }
+.fab svg { width: 22px; height: 22px; }
+@media (min-width: 700px) { .fab { right: calc(50% - 320px + 16px); } }
+
+/* Sheet */
+dialog.sheet { border: 0; padding: 0; margin: auto auto 0; width: 100%; max-width: 640px; max-height: 92vh; max-height: 92dvh; border-radius: 20px 20px 0 0; background: var(--bg); color: var(--ink); overflow: auto; }
+dialog.sheet::backdrop { background: rgba(5,15,20,.5); }
+@media (min-width: 700px) { dialog.sheet { margin: auto; border-radius: 20px; } }
+.sheet-in { display: grid; gap: 16px; padding-block: 10px calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.stack { display: grid; gap: 16px; }
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); justify-self: center; }
+.sheet-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sheet-h h2 { margin: 0; font-weight: 700; font-size: 22px; line-height: 1.25; overflow-wrap: anywhere; }
+.sheet-sub { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+.field { display: grid; gap: 6px; }
+.field > span, .label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.field input, .field textarea { width: 100%; min-height: 44px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); padding: 10px 12px; }
+.field textarea { min-height: 76px; resize: vertical; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.step { display: grid; gap: 4px; font-size: 11.5px; color: var(--muted); text-align: center; }
+.step i { height: 6px; border-radius: 3px; background: var(--line); }
+.step.done i { background: var(--stc); opacity: .45; }
+.step.cur i { background: var(--stc); }
+.step.cur { color: var(--ink); font-weight: 600; }
+.panel { background: var(--surface); border-radius: 14px; padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow); border-top: 4px solid var(--stc); }
+.panel-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.panel-h b { font-size: 16px; }
+.panel .sub { font-size: 13.5px; color: var(--muted); }
+.panel .script { font-size: 14px; white-space: pre-wrap; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.pick { display: grid; gap: 8px; background: var(--surface-2); border-radius: 12px; padding: 12px; }
+.pick b { font-size: 14px; }
+.pick .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick input[type=date] { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 0 10px; }
+.moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.moves .wide { grid-column: 1 / -1; }
+.contact { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.contact .info { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; user-select: all; }
+.history ul { margin: 0; padding: 0; }
+.history li { list-style: none; display: grid; grid-template-columns: 52px 1fr; gap: 10px; font-size: 13px; padding: 7px 0; border-top: 1px solid var(--line); }
+.history li time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.confirm { background: var(--warn-soft); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+details.more summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); padding: 4px 0; }
+details.more[open] summary { margin-bottom: 10px; }
+
+/* Auth */
+.auth { min-height: 100%; display: grid; align-content: center; padding-block: 32px; }
+.auth .box { max-width: 420px; width: 100%; margin: 0 auto; display: grid; gap: 18px; }
+.auth h1 { margin: 0; font-family: var(--font-display); font-size: 26px; }
+.auth h1 span { color: var(--accent); }
+.auth p { margin: 0; color: var(--muted); }
+.auth form { display: grid; gap: 12px; background: var(--surface); padding: 18px; border-radius: 16px; box-shadow: var(--shadow); }
+.auth .switch { display: flex; gap: 6px; background: var(--surface-2); border-radius: 12px; padding: 4px; }
+.auth .switch button { flex: 1; border: 0; background: none; min-height: 38px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+.auth .switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.auth .msg { font-size: 14px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); }
+.auth .msg.err { background: var(--warn-soft); color: var(--warn); }
+.linkish { background: none; border: 0; color: var(--accent); font-weight: 600; padding: 0; justify-self: start; }
+
+.toast { position: fixed; z-index: 20; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav-h) + 84px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; width: max-content; max-width: calc(100% - 32px); box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; }
+.toast button { background: none; border: 0; color: var(--accent-soft); font-weight: 700; padding: 0; }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: rise .2s ease-out; } @keyframes rise { from { transform: translate(-50%, 8px); opacity: 0; } } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+
+<div id="authScreen" hidden></div>
+
+<div id="appScreen" hidden>
+  <header class="top"><div class="wrap">
+    <div class="brand">Follow <span>Up</span></div>
+    <div class="today-date" id="todayDate"></div>
+  </div></header>
+  <main><div class="wrap" id="view"></div></main>
+  <button class="fab" type="button" data-act="add">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    Нов контакт
+  </button>
+  <nav class="nav" aria-label="Основно меню"><div class="in">
+    <button class="tab" type="button" data-tab="today" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      Днес<span class="badge" id="badge" hidden></span>
+    </button>
+    <button class="tab" type="button" data-tab="ladder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18M7 7h10M7 12h10M7 17h10"/></svg>
+      Стълбица
+    </button>
+    <button class="tab" type="button" data-tab="more">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      Още
+    </button>
+  </div></nav>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheetTitle"><div class="sheet-in" id="sheetBody"></div></dialog>
+<div id="toastHost" aria-live="polite"></div>
+
+<script src="supabase.js"></script>
+<script>
+/* =====================================================================
+   НАСТРОЙКИ
+   Базата и акаунтите са общи с AKTIV90 (Supabase проект aktiv90-run).
+   Контактите са таблицата contacts; полетата на Follow Up започват с fu_.
+   ===================================================================== */
+const SUPABASE_URL = "https://avyfzcevzmcknsidizuo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ZwyTPjs0t8Eg6e-ESf6weA_WUQaKPUL";
+/* Follow Up започва на чисто от тази дата: по-старите контакти от AKTIV90 не се показват тук
+   (в AKTIV90 си остават). Показват се само по-новите и тези, които вече са в стълбицата. */
+const START_DAY = "2026-10-26";
+
+const STAGES = [
+  { id: "prospect",   name: "Prospect",   desc: "Да представиш Kangen / Възможност" },
+  { id: "interested", name: "Interested", desc: "Видели са информация и е време за демо" },
+  { id: "close",      name: "Close",      desc: "Видели са демо и е време за разговор, ако това е за тях" }
+];
+const BOXES = [
+  { id: "client", name: "Клиенти / Партньори", desc: "Купиха машина или влязоха в екипа" },
+  { id: "later",  name: "Сега не е моментът",  desc: "Ще им пишеш пак" },
+  { id: "lost",   name: "Отпаднали",           desc: "Отказ или игнор" }
+];
+/* Ритъмът: 1-ви follow up → 2-ри follow up → Фаза 1 → Фаза 2 → Фаза 3.
+   След всяко пратено съобщение приложението не насрочва следващото, а пита:
+   „Върна ли се в разговора, или е време за следващото?“. Фаза 3 е последната:
+   ако след нея не се върне, контактът отпада. */
+const ASK_AFTER = 1;        // след колко дни да пита (след follow up и Фаза 1, 2)
+const ASK_AFTER_LAST = 2;   // след Фаза 3
+const STEPS = ["", "1-ви follow up", "2-ри follow up", "Фаза 1", "Фаза 2", "Фаза 3"];
+const sent = n => (n >= 3 ? "Пратена " : "Пратен ") + STEPS[n];
+/* Текстове за всяка фаза. */
+const PHASES = {
+  prospect:   ["", "", ""],
+  interested: ["", "", ""],
+  close:      ["", "", ""]
+};
+const NETWORKS = [["instagram", "Instagram"], ["tiktok", "TikTok"], ["facebook", "Facebook"], ["viber", "Viber"], ["live", "На живо"]];
+const SOURCES = ["Социални мрежи", "Реклама", "Събитие", "Познат", "Препоръка", "Друго"];
+
+const NET = Object.fromEntries(NETWORKS);
+const ST = Object.fromEntries([...STAGES, ...BOXES].map((s, i) => [s.id, { ...s, i }]));
+const ACTIVE = STAGES.map(s => s.id);
+const COLOR = { prospect: "var(--st-prospect)", interested: "var(--st-interested)", close: "var(--st-close)", client: "var(--st-client)", later: "var(--st-later)", lost: "var(--st-lost)" };
+const COLS = "id,name,info,note,created_day,created_at,fu_stage,fu_back,fu_network,fu_source,fu_phase,fu_next,fu_last,fu_msgs,fu_log,fu_updated";
+const FU_FIELDS = ["name", "info", "note", "fu_stage", "fu_back", "fu_network", "fu_source", "fu_phase", "fu_next", "fu_last", "fu_msgs", "fu_log", "fu_updated"];
+
+/* ---------- Icons ---------- */
+const I = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 3h8v9h4.5L12 21 3.5 12H8z"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const dstr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => dstr(new Date());
+const parseD = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return dstr(d); };
+const addMonths = (s, n) => { const d = parseD(s); d.setMonth(d.getMonth() + n); return dstr(d); };
+const diff = (a, b) => Math.round((parseD(a) - parseD(b)) / 86400000);
+const days = n => n === 1 ? "1 ден" : `${n} дни`;
+const ord = n => n + (n === 1 ? "-ви" : n === 2 ? "-ри" : n === 7 || n === 8 ? "-ми" : "-ти");
+const fmtShort = s => parseD(s).toLocaleDateString("bg-BG", { day: "numeric", month: "short" });
+const fmtLong = s => parseD(s).toLocaleDateString("bg-BG", { weekday: "short", day: "numeric", month: "long" });
+const clone = o => JSON.parse(JSON.stringify(o));
+function relDay(s) {
+  const n = diff(s, today());
+  if (n === 0) return "днес";
+  if (n === 1) return "утре";
+  if (n === -1) return "вчера";
+  return n < 0 ? `преди ${days(-n)}` : `след ${days(n)}`;
+}
+function lastWritten(c) {
+  if (!c.fu_last) return "още не си писал";
+  const n = diff(today(), c.fu_last);
+  return n === 0 ? "писано днес" : n === 1 ? "писано вчера" : `писано преди ${days(n)}`;
+}
+function profileUrl(c) {
+  const h = (c.info || "").trim();
+  if (/^https?:\/\//i.test(h)) return h;
+  if (c.fu_network === "viber") {
+    let d = h.replace(/[^\d+]/g, "");
+    if (d.startsWith("00")) d = "+" + d.slice(2);
+    else if (d.startsWith("0")) d = "+359" + d.slice(1);
+    else if (!d.startsWith("+")) d = "+" + d;
+    return d.length > 6 ? `viber://chat?number=${encodeURIComponent(d)}` : "";
+  }
+  const u = encodeURIComponent(h.replace(/^@/, ""));
+  if (!u || /\s/.test(h)) return "";
+  if (c.fu_network === "instagram") return `https://instagram.com/${u}`;
+  if (c.fu_network === "tiktok") return `https://www.tiktok.com/@${u}`;
+  if (c.fu_network === "facebook") return `https://facebook.com/${u}`;
+  return "";
+}
+const openLabel = c => c.fu_network && c.fu_network !== "live" ? `Отвори в ${NET[c.fu_network]}` : "Отвори профила";
+const INFO_HINT = {
+  instagram: ["@maria.p", "Потребителското име (с или без @) или линк към профила."],
+  tiktok: ["@maria.p", "Потребителското име (с или без @) или линк към профила."],
+  facebook: ["maria.petrova", "Потребителското име от адреса на профила или целия линк. Ако няма име, копирай линка."],
+  viber: ["0888 123 456", "Телефонният номер, с който е във Viber."],
+  live: ["0888 123 456", "Телефон или друг начин за връзка (по желание)."]
+};
+
+/* ---------- Data (Supabase) ---------- */
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const Data = {
+  user: null, list: [], loaded: false,
+  get(id) { const c = this.list.find(x => x.id === id); return c ? clone(c) : null; },
+  async load() {
+    const { data, error } = await sb.from("contacts").select(COLS).or(`fu_stage.not.is.null,created_day.gte.${START_DAY}`).order("created_at", { ascending: false });
+    if (error) { toast("Контактите не се заредиха. Провери интернета."); return; }
+    this.list = data.map(c => ({ ...c, fu_log: Array.isArray(c.fu_log) ? c.fu_log : [] }));
+    this.loaded = true;
+    render();
+  },
+  async save(c) {
+    c.fu_updated = new Date().toISOString();
+    if (c.fu_log.length > 60) c.fu_log = c.fu_log.slice(-60);
+    const i = this.list.findIndex(x => x.id === c.id);
+    const before = i >= 0 ? this.list[i] : null;
+    if (i >= 0) this.list[i] = c;
+    render();
+    const patch = Object.fromEntries(FU_FIELDS.map(k => [k, c[k]]));
+    const { error } = await sb.from("contacts").update(patch).eq("id", c.id);
+    if (error) {
+      if (before) this.list[i] = before;
+      render();
+      toast("Промяната не се записа. Опитай пак.");
+    }
+  },
+  async add(fields) {
+    const row = { user_id: this.user.id, name: fields.name, info: fields.info || "", note: fields.note || "",
+      fu_stage: fields.fu_stage, fu_network: fields.fu_network || null, fu_source: fields.fu_source || null,
+      fu_phase: 0, fu_msgs: 0, fu_log: [{ t: Date.now(), a: "add", s: fields.fu_stage }], fu_updated: new Date().toISOString() };
+    const { data, error } = await sb.from("contacts").insert(row).select(COLS).single();
+    if (error) { toast("Контактът не се записа. Опитай пак."); return null; }
+    this.list.unshift({ ...data, fu_log: data.fu_log || [] });
+    render();
+    return data;
+  },
+  async remove(id) {
+    const { error } = await sb.from("contacts").delete().eq("id", id);
+    if (error) { toast("Не успях да изтрия контакта."); return false; }
+    this.list = this.list.filter(x => x.id !== id);
+    render();
+    return true;
+  }
+};
+
+/* ---------- Actions on a contact (only forward on the ladder) ---------- */
+const log = (c, entry) => c.fu_log.push({ t: Date.now(), ...entry });
+const nextStage = c => ACTIVE[ACTIVE.indexOf(c.fu_stage) + 1] || null;
+
+/* Step in the cycle: 0 = в разговор, 1-2 = обикновен follow up, 3-5 = Фаза 1-3. */
+const stepOf = c => c.fu_phase ? 2 + Math.min(c.fu_phase, 3) : Math.min(c.fu_msgs || 0, 2);
+function question(c) {
+  const s = stepOf(c);
+  return s >= 5 ? "Върна ли се в разговора след Фаза 3, или отпада?" : `Върна ли се в разговора, или е време за ${STEPS[s + 1]}?`;
+}
+
+const A = {
+  assign(c, stage) { c.fu_stage = stage; c.fu_phase = 0; c.fu_msgs = 0; c.fu_next = null; log(c, { a: "add", s: stage }); return `${c.name} е в ${ST[stage].name}.`; },
+  send(c) {
+    const step = stepOf(c) + 1;
+    if (step > 5) return "Фаза 3 вече е пратена.";
+    if (step <= 2) c.fu_msgs = step; else { c.fu_msgs = 2; c.fu_phase = step - 2; }
+    c.fu_last = today();
+    const wait = step === 5 ? ASK_AFTER_LAST : ASK_AFTER;
+    c.fu_next = addDays(today(), wait);
+    log(c, { a: "sent", n: step, s: c.fu_stage });
+    return `${STEPS[step]} е ${step >= 3 ? "отбелязана" : "отбелязан"}. ${wait === 1 ? "Утре" : "След " + days(wait)} ще те питам дали се е върнал.`;
+  },
+  replied(c) {
+    log(c, { a: "reply", n: stepOf(c), s: c.fu_stage });
+    c.fu_msgs = 0; c.fu_phase = 0; c.fu_next = null; c.fu_last = today();
+    return `${c.name} е отново в разговор. Като спре да отговаря, пусни 1-ви follow up.`;
+  },
+  snooze(c, n) { c.fu_next = addDays(today(), n); log(c, { a: "date", d: c.fu_next }); return n === 1 ? "Отложено. Ще те питам утре." : `Отложено за ${fmtShort(c.fu_next)}.`; },
+  reschedule(c, date) { c.fu_next = date; log(c, { a: "date", d: date }); return `Ще те питам на ${fmtShort(date)}.`; },
+  forward(c) {
+    const n = nextStage(c);
+    log(c, { a: "move", s: n, from: c.fu_stage });
+    c.fu_stage = n; c.fu_phase = 0; c.fu_msgs = 0; c.fu_next = null;
+    return `${c.name} е вече в ${ST[n].name}.`;
+  },
+  toBox(c, box, date) {
+    if (ACTIVE.includes(c.fu_stage)) c.fu_back = c.fu_stage;
+    log(c, { a: "move", s: box, from: c.fu_stage, d: date });
+    c.fu_stage = box; c.fu_phase = 0; c.fu_msgs = 0; c.fu_next = box === "later" ? date : null;
+    if (box === "client") return `${c.name} е в Клиенти / Партньори. Браво!`;
+    if (box === "later") return `Ще ти напомня на ${fmtShort(date)}.`;
+    return `${c.name} е в Отпаднали.`;
+  },
+  back(c) {
+    const s = c.fu_back || "prospect";
+    log(c, { a: "back", s });
+    c.fu_stage = s; c.fu_phase = 0; c.fu_msgs = 0; c.fu_next = null;
+    return `${c.name} е отново в ${ST[s].name}, в разговор.`;
+  }
+};
+
+/* ---------- Derived lists ---------- */
+function groups() {
+  const t = today();
+  const L = Data.list;
+  const active = L.filter(c => ACTIVE.includes(c.fu_stage));
+  const prio = (a, b) => (a.fu_next || "").localeCompare(b.fu_next || "") || ACTIVE.indexOf(b.fu_stage) - ACTIVE.indexOf(a.fu_stage) || stepOf(b) - stepOf(a);
+  return {
+    ask: active.filter(c => stepOf(c) >= 1 && c.fu_next && c.fu_next <= t).sort(prio),
+    later: L.filter(c => c.fu_stage === "later" && c.fu_next && c.fu_next <= t).sort(prio),
+    talking: active.filter(c => stepOf(c) === 0).sort((a, b) => (a.fu_last || "0").localeCompare(b.fu_last || "0")),
+    fresh: L.filter(c => !c.fu_stage),
+    doneToday: L.reduce((n, c) => n + c.fu_log.filter(l => l.a === "sent" && dstr(new Date(l.t)) === t).length, 0)
+  };
+}
+
+/* ---------- Rendering ---------- */
+const state = { closed: new Set(), opened: new Set(), tab: "today", sel: null, box: null, q: "", openId: null, sheet: null, pick: null, confirmDel: false };
+
+function stageChip(c) {
+  if (!c.fu_stage) return `<span class="chip">Без стъпало</span>`;
+  return `<span class="chip st" style="--stc:${COLOR[c.fu_stage]}">${esc(ST[c.fu_stage].name)}</span>`;
+}
+/* Where the contact is now, as one plain sentence. */
+function nextStep(c) {
+  if (!ACTIVE.includes(c.fu_stage)) return "";
+  const s = stepOf(c);
+  if (s === 0) return "В разговор";
+  if (!c.fu_next) return `${sent(s)}`;
+  const n = diff(c.fu_next, today());
+  if (n > 0) return `${sent(s)} · ще те питам ${relDay(c.fu_next)}`;
+  return `${sent(s)}${n < 0 ? ` · въпросът чака от ${relDay(c.fu_next).replace("преди ", "")}` : ""}`;
+}
+const phaseLabel = nextStep;
+function lastLine(c) {
+  if (!c.fu_last) return "още не си писал";
+  const n = diff(today(), c.fu_last);
+  return "последно писано " + (n === 0 ? "днес" : n === 1 ? "вчера" : `преди ${days(n)}`);
+}
+function rowHTML(c, kind) {
+  const t = today();
+  const s = stepOf(c);
+  const overdue = c.fu_next && c.fu_next < t;
+  const chips = [stageChip(c)];
+  if (c.fu_network) chips.push(`<span class="chip">${esc(NET[c.fu_network])}</span>`);
+  let line = "";
+  if (kind === "ask") line = `<span class="q">${question(c)}</span><span class="${overdue ? "bad" : ""}">${sent(s)} · ${lastLine(c)}</span>`;
+  else if (ACTIVE.includes(c.fu_stage)) line = `<span>${nextStep(c)}</span><span>${lastLine(c)}</span>`;
+  else if (c.fu_stage === "later" && c.fu_next) line = `<span class="${c.fu_next <= t ? "bad" : ""}">Пиши му пак на ${fmtShort(c.fu_next)}</span><span>${lastLine(c)}</span>`;
+  let act = "";
+  if (kind === "ask") act = `<div class="row-btns">
+      <button class="btn" type="button" data-act="replied" data-id="${c.id}">Върна се</button>
+      ${s >= 5 ? `<button class="btn" type="button" data-act="toBox" data-v="lost" data-id="${c.id}">Отпадна</button>`
+               : `<button class="btn primary" type="button" data-act="send" data-id="${c.id}">Пратих ${STEPS[s + 1]}</button>`}</div>
+    <div class="row-tools">${profileUrl(c) ? `<a class="btn small ghost" href="${esc(profileUrl(c))}" target="_blank" rel="noopener">${I.link}Профил</a>` : ""}
+      <button class="btn small ghost" type="button" data-act="snooze" data-id="${c.id}">${I.clock}Отложи за утре</button>
+      <button class="btn small ghost" type="button" data-act="snoozeOther" data-id="${c.id}">Друг ден</button></div>`;
+  if (kind === "talk") act = `<div class="row-btns one"><button class="btn" type="button" data-act="send" data-id="${c.id}">Пратих 1-ви follow up</button></div>`;
+  if (kind === "later") act = `<div class="row-btns one"><button class="btn" type="button" data-act="back" data-id="${c.id}">Върни в ${ST[c.fu_back || "prospect"].name}</button></div>`;
+  return `<div class="row ${act ? "stacked" : ""} ${overdue && kind === "ask" ? "overdue" : ""}" style="--stc:${COLOR[c.fu_stage] || "var(--line)"}">
+    <button class="row-main" type="button" data-act="open" data-id="${c.id}"><span class="row-name">${esc(c.name)}</span>
+      <span class="row-meta">${chips.join("")}</span>${line ? `<span class="row-line">${line}</span>` : ""}</button>
+    ${act}</div>`;
+}
+const listHTML = (items, kind) => `<div class="list">${items.map(c => rowHTML(c, kind)).join("")}</div>`;
+function block(id, title, color, items, kind, note, closedByDefault) {
+  if (!items.length) return "";
+  const open = closedByDefault ? state.opened.has(id) : !state.closed.has(id);
+  return `<details class="block" id="${id}" style="--bc:${color}" ${open ? "open" : ""}>
+    <summary class="block-h"><h2>${title}</h2><span class="count">${items.length}</span><span class="toggle" aria-hidden="true"></span></summary>
+    ${note ? `<p class="block-note">${note}</p>` : ""}${listHTML(items, kind)}</details>`;
+}
+const loading = () => `<div class="view"><div class="note-box">Зареждам контактите ти…</div></div>`;
+
+function renderToday() {
+  if (!Data.loaded) return loading();
+  const g = groups();
+  if (!Data.list.length) {
+    return `<div class="view"><div class="empty"><h3>Тук всеки ден ще виждаш кого да попиташ и на кого да пишеш</h3>
+      <p>Добави контакт. Когато спре да ти отговаря и му пратиш 1-ви follow up, отбележи го. На следващия ден приложението ще те пита дали се е върнал в разговора.</p>
+      <button class="btn primary" type="button" data-act="add">Добави контакт</button></div></div>`;
+  }
+  const tile = (target, n, title, sub, color, main) => `<button class="tile ${main ? "main" : ""} ${n ? "" : "zero"}" type="button" data-act="jump" data-v="${target}" style="--tc:${color}">
+    <span class="n">${n}</span><span class="t">${title}</span><span class="s">${sub}</span></button>`;
+  const overdue = g.ask.filter(c => c.fu_next < today()).length;
+  return `<div class="view today">
+    <div class="tiles">
+      ${tile("b-ask", g.ask.length, "Въпроси за днес", (overdue ? `<b class="bad">${overdue} от предишни дни</b> · ` : "") + `${g.doneToday} пратени днес`, "var(--accent)", true)}
+      ${tile("b-later", g.later.length, "Пиши им пак", "дойде датата", "var(--st-later)")}
+      ${tile("b-talk", g.talking.length, "В разговор", "отговарят ти", "var(--st-client)")}
+    </div>
+    ${!g.ask.length && !g.later.length ? `<div class="note-box">Днес няма въпроси. Когато някой спре да отговаря, отвори го в „В разговор“ и отбележи 1-ви follow up.</div>` : ""}
+    ${block("b-ask", "Въпроси за днес", "var(--accent)", g.ask, "ask", "Отговори с едно натискане. Най-старите и Close са най-горе.")}
+    ${block("b-later", "Пиши им пак", "var(--st-later)", g.later, "later", "От „Сега не е моментът“. Дойде датата, която си избрал.")}
+    ${block("b-fresh", "Нови от AKTIV90", "var(--muted)", g.fresh, "", "Отвори ги и избери на кое стъпало са.")}
+    ${block("b-talk", "В разговор", "var(--st-client)", g.talking, "talk", "Отговарят ти. Когато някой спре, пусни му 1-ви follow up и натисни бутона.", true)}
+  </div>`;
+}
+
+/* Accordion of stages or boxes: tap one to open its people right below it. */
+function accordion(defs, key, arrows) {
+  const L = Data.list;
+  return defs.map((d, i) => {
+    const items = L.filter(d.filter);
+    const open = state[key] === d.id;
+    if (d.id === "later") items.sort((a, b) => (a.fu_next || "9").localeCompare(b.fu_next || "9"));
+    else items.sort((a, b) => b.fu_phase - a.fu_phase || (a.fu_next || "9").localeCompare(b.fu_next || "9") || (a.fu_last || "0").localeCompare(b.fu_last || "0"));
+    return `<div class="acc">
+      <button class="rung ${d.bar ? "" : "box"}" type="button" data-act="${key}" data-v="${d.id}" aria-expanded="${open}" style="--stc:${d.color}">
+        ${d.bar ? `<span class="bar"></span>` : ""}<span class="t"><b>${esc(d.name)}</b><small>${esc(d.desc)}</small></span><span class="num">${items.length}</span></button>
+      ${open ? `<div class="acc-list">${items.length ? listHTML(items, d.id === "later" ? "laterList" : "") : `<div class="note-box">Няма контакти тук.</div>`}</div>` : ""}
+    </div>${arrows && i < defs.length - 1 ? `<div class="arrow" aria-hidden="true">${I.down}</div>` : ""}`;
+  }).join("");
+}
+
+function renderLadder() {
+  if (!Data.loaded) return loading();
+  const q = state.q.trim().toLowerCase();
+  const found = q ? Data.list.filter(c => `${c.name} ${c.info} ${c.note}`.toLowerCase().includes(q)) : [];
+  const defs = STAGES.map(s => ({ id: s.id, name: s.name, desc: s.desc, color: COLOR[s.id], bar: true, filter: c => c.fu_stage === s.id }));
+  return `<div class="view">
+    <label class="sr" for="q">Търси контакт</label>
+    <input class="search" id="q" type="search" placeholder="Търси контакт по име или профил" value="${esc(state.q)}" autocomplete="off">
+    ${q ? (found.length ? listHTML(found, "") : `<div class="note-box">Няма контакт с това име.</div>`) : `<div class="ladder">${accordion(defs, "sel", true)}</div>`}
+  </div>`;
+}
+
+function renderMore() {
+  if (!Data.loaded) return loading();
+  const L = Data.list.filter(c => c.fu_stage);
+  const rows = [...SOURCES, ""].map(s => {
+    const of = L.filter(c => (c.fu_source || "") === s);
+    return { s: s || "Без източник", n: of.length, won: of.filter(c => c.fu_stage === "client").length };
+  }).filter(r => r.n);
+  const boxes = [
+    ...BOXES.map(b => ({ id: b.id, name: b.name, desc: b.desc, color: COLOR[b.id], filter: c => c.fu_stage === b.id })),
+    { id: "none", name: "Нови от AKTIV90", desc: "Още без стъпало. Отвори и избери.", color: "var(--muted)", filter: c => !c.fu_stage }
+  ];
+  let remind = "09:00"; try { remind = localStorage.getItem("fu-remind") || remind; } catch {}
+  return `<div class="view">
+    <div class="ladder boxes">${accordion(boxes, "box", false)}</div>
+    <div class="card"><h3>Откъде идват хората</h3>
+      ${rows.length ? `<div class="table"><div class="table-row h"><span>Източник</span><span>Хора</span><span>Клиенти</span></div>
+        ${rows.map(r => `<div class="table-row"><span>${esc(r.s)}</span><span>${r.n}</span><span>${r.won}</span></div>`).join("")}</div>`
+        : `<p>Избери „Откъде е дошъл“ в картата на контакта и тук ще видиш кой източник носи клиенти.</p>`}
+    </div>
+    <div class="card"><h3>Ежедневно напомняне</h3>
+      <p>Добави повтарящо се събитие в Google Календар. Всяка сутрин ще ти напомня да отвориш Follow Up.</p>
+      <label class="field"><span>Час</span><input id="remindAt" type="time" value="${esc(remind)}"></label>
+      <div class="actions"><a class="btn primary" id="gcal" href="${esc(gcalUrl(remind))}" target="_blank" rel="noopener">${I.link}Добави в Google Календар</a></div>
+    </div>
+    <div class="card"><h3>Профил</h3>
+      <p>Влязъл си като ${esc(Data.user && Data.user.email)}. Акаунтът и контактите са същите като в AKTIV90.</p>
+      <div class="actions"><button class="btn" type="button" data-act="logout">Изход</button></div>
+    </div>
+  </div>`;
+}
+
+function render() {
+  if (!Data.user) return;
+  const focusQ = document.activeElement && document.activeElement.id === "q";
+  const caret = focusQ ? document.activeElement.selectionStart : 0;
+  $("#view").innerHTML = state.tab === "today" ? renderToday() : state.tab === "ladder" ? renderLadder() : renderMore();
+  document.querySelectorAll(".tab").forEach(t => t.dataset.tab === state.tab ? t.setAttribute("aria-current", "page") : t.removeAttribute("aria-current"));
+  if (focusQ) { const q = $("#q"); if (q) { q.focus(); q.setSelectionRange(caret, caret); } }
+  const g = Data.loaded ? groups() : null;
+  const n = g ? g.ask.length + g.later.length : 0;
+  $("#badge").hidden = !n; $("#badge").textContent = n;
+  document.title = n ? `(${n}) Follow Up` : "Follow Up";
+  $("#todayDate").textContent = fmtLong(today());
+  const typing = sheet.contains(document.activeElement) && document.activeElement.matches("textarea, input:not([type]), input[type=text], input[type=email]");
+  if (state.sheet === "contact" && !typing) renderContact();
+}
+
+/* ---------- Sheet ---------- */
+const sheet = $("#sheet");
+function openSheet(kind, id) {
+  Object.assign(state, { sheet: kind, openId: id || null, pick: null, confirmDel: false });
+  kind === "add" ? renderAdd() : renderContact();
+  if (!sheet.open) sheet.showModal();
+}
+function closeSheet() { if (sheet.open) sheet.close(); }
+sheet.addEventListener("close", () => { state.sheet = null; state.openId = null; });
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+
+const seg = (name, opts, sel) => `<div class="seg">${opts.map(([v, l]) => `<label><input type="radio" name="${name}" value="${esc(v)}" ${v === sel ? "checked" : ""}><span>${esc(l)}</span></label>`).join("")}</div>`;
+
+function renderAdd() {
+  const st = ACTIVE.includes(state.sel) ? state.sel : "prospect";
+  $("#sheetBody").innerHTML = `<div class="grab"></div>
+    <div class="sheet-h"><h2 id="sheetTitle">Нов контакт</h2><button class="btn icon ghost" type="button" data-act="close" aria-label="Затвори">${I.x}</button></div>
+    <form id="addForm" class="stack">
+      <label class="field"><span>Име</span><input name="name" required autocomplete="off" placeholder="Мария Петрова"></label>
+      <div class="field"><span class="label">Социална мрежа</span>${seg("net", NETWORKS, "instagram")}</div>
+      <label class="field"><span>Профил, линк или телефон</span><input name="info" id="infoIn" autocomplete="off" placeholder="${INFO_HINT.instagram[0]}"><small class="hint" id="infoHint">${INFO_HINT.instagram[1]}</small></label>
+      <div class="field"><span class="label">Стъпало</span>${seg("stage", STAGES.map(s => [s.id, s.name]), st)}</div>
+      <div class="field"><span class="label">Откъде е дошъл</span>${seg("source", SOURCES.map(s => [s, s]), "")}</div>
+      <button class="btn primary big" type="submit">Запази контакта</button>
+    </form>`;
+}
+
+/* Dates of the messages sent in the current cycle (since the last "върна се" / move). */
+function cycleDates(c) {
+  let start = 0;
+  c.fu_log.forEach((l, i) => { if (["reply", "move", "back", "add"].includes(l.a)) start = i + 1; });
+  const out = {};
+  c.fu_log.slice(start).forEach(l => { if (l.a === "sent") out[l.n] = dstr(new Date(l.t)); });
+  return out;
+}
+const ago = d => { const n = diff(today(), d); return n === 0 ? "днес" : n === 1 ? "вчера" : `преди ${days(n)}`; };
+
+function renderContact() {
+  const c = Data.get(state.openId);
+  if (!c) { closeSheet(); return; }
+  const url = profileUrl(c);
+  const color = COLOR[c.fu_stage] || "var(--line)";
+  const active = ACTIVE.includes(c.fu_stage);
+  const idx = ACTIVE.indexOf(c.fu_stage);
+  const steps = active ? `<div class="steps">${STAGES.map((s, i) => `<div class="step ${i < idx ? "done" : i === idx ? "cur" : ""}" style="--stc:${color}"><i></i>${s.name}</div>`).join("")}</div>` : "";
+
+  const datePick = (act, title, quick) => `<div class="pick"><b>${title}</b><div class="btns">
+      ${quick.map(([v, l]) => `<button class="btn small" type="button" data-act="${act}" data-d="${v}" data-id="${c.id}">${l}</button>`).join("")}</div>
+      <label class="field"><span>Или избери дата</span><input type="date" data-pickact="${act}" min="${today()}"></label></div>`;
+  const later = [[addMonths(today(), 1), "След 1 месец"], [addMonths(today(), 2), "След 2 месеца"], [addMonths(today(), 3), "След 3 месеца"]];
+  const sec = (title, body, opts = {}) => `<section class="csec" style="--sc:${opts.color || "var(--line)"}"><h3 class="csec-h">${title}${opts.right || ""}</h3>${body}</section>`;
+
+  let fu = "";
+  if (!c.fu_stage) {
+    fu = sec("На кое стъпало е?", `<p class="sub">Контактът е от AKTIV90 и още не е в стълбицата.</p>
+      <div class="actions">${STAGES.map(s => `<button class="btn" type="button" data-act="assign" data-v="${s.id}" data-id="${c.id}">${s.name}</button>`).join("")}</div>`);
+  } else if (active) {
+    const st = stepOf(c);
+    const dates = cycleDates(c);
+    if (st && !dates[st] && c.fu_last) dates[st] = c.fu_last;
+    const tl = `<ol class="tl">${STEPS.slice(1).map((n, i) => {
+      const k = i + 1, d = dates[k];
+      const cls = k <= st ? "done" : k === st + 1 ? "next" : "";
+      return `<li class="${cls}"><span class="dot">${k <= st ? I.check : ""}</span><span class="nm">${n}</span>
+        <span class="dt">${k <= st ? (d ? `${fmtShort(d)} · ${ago(d)}` : "пратен") : k === st + 1 ? "следва" : ""}</span></li>`;
+    }).join("")}</ol>`;
+    const nextText = st >= 2 && st < 5 ? (PHASES[c.fu_stage] || [])[st - 2] : "";
+    const status = st === 0 ? "В разговор" : sent(st);
+    let body = `<p class="sub">${lastLine(c)[0].toUpperCase() + lastLine(c).slice(1)}${st && c.fu_next ? ` · ${c.fu_next <= today() ? "въпросът е за днес" : "ще те питам " + relDay(c.fu_next)}` : ""}</p>${tl}`;
+    if (st === 0) {
+      body += `<div class="q-box">Отговаря ти. Когато спре и му пратиш 1-ви follow up, натисни бутона.</div>
+        <button class="btn primary big" type="button" data-act="send" data-id="${c.id}">${I.send}Пратих 1-ви follow up</button>`;
+    } else {
+      body += `<div class="q-box ${c.fu_next && c.fu_next < today() ? "late" : ""}">${question(c)}</div>
+        ${nextText ? `<div class="script" id="script">${esc(nextText)}</div><button class="btn small ghost" type="button" data-act="copyscript" style="justify-self:start">${I.copy}Копирай текста за ${STEPS[st + 1]}</button>` : ""}
+        <div class="moves">
+          <button class="btn big" type="button" data-act="replied" data-id="${c.id}">Върна се</button>
+          ${st >= 5 ? `<button class="btn big" type="button" data-act="toBox" data-v="lost" data-id="${c.id}">Отпадна</button>`
+                    : `<button class="btn primary big" type="button" data-act="send" data-id="${c.id}">Пратих ${STEPS[st + 1]}</button>`}
+        </div>
+        <div class="actions"><button class="btn small" type="button" data-act="snooze" data-id="${c.id}">${I.clock}Отложи за утре</button>
+          <button class="btn small ghost" type="button" data-act="pick" data-v="date">Друг ден</button></div>
+        ${state.pick === "date" ? datePick("date", "Кога да те питам?", [[addDays(today(), 2), "След 2 дни"], [addDays(today(), 3), "След 3 дни"], [addDays(today(), 7), "След седмица"]]) : ""}`;
+    }
+    fu = sec("Follow up", body, { color, right: `<span class="csec-tag">${status}</span>` });
+  } else if (c.fu_stage === "later") {
+    fu = sec("Сега не е моментът", `<p class="sub ${c.fu_next && c.fu_next <= today() ? "bad" : ""}">Пиши му пак на ${c.fu_next ? fmtShort(c.fu_next) + " (" + relDay(c.fu_next) + ")" : "—"} · ${lastLine(c)}</p>
+      <div class="actions"><button class="btn primary" type="button" data-act="back" data-id="${c.id}">Върни в ${ST[c.fu_back || "prospect"].name}</button>
+      <button class="btn" type="button" data-act="pick" data-v="later">Смени датата</button></div>
+      ${state.pick === "later" ? datePick("laterDate", "Кога да ти напомня?", later) : ""}`, { color });
+  } else if (c.fu_stage === "lost") {
+    fu = sec("Отпаднал", `<p class="sub">Отказ или игнор · ${lastLine(c)}</p>
+      <div class="actions"><button class="btn" type="button" data-act="back" data-id="${c.id}">Върни в ${ST[c.fu_back || "prospect"].name}</button></div>`, { color });
+  } else {
+    fu = sec("Клиент / Партньор", `<p class="sub">Купи машина или влезе в екипа.</p>`, { color });
+  }
+
+  let moves = "";
+  if (active) {
+    const n = nextStage(c);
+    moves = sec("Премести", `<div class="moves">
+      ${n ? `<button class="btn wide" type="button" data-act="forward" data-id="${c.id}">${I.right}Напред в ${ST[n].name}</button>` : ""}
+      <button class="btn wide" type="button" data-act="toBox" data-v="client" data-id="${c.id}">Клиенти / Партньори</button>
+      <button class="btn" type="button" data-act="pick" data-v="park">Сега не е моментът</button>
+      <button class="btn" type="button" data-act="toBox" data-v="lost" data-id="${c.id}">Отпаднал</button>
+    </div>${state.pick === "park" ? datePick("park", "Кога да му пишеш пак?", later) : ""}`);
+  }
+
+  const logText = l => ({
+    add: () => `В ${ST[l.s] ? ST[l.s].name : "стълбицата"}`,
+    sent: () => `Пратих ${STEPS[l.n] || ""}`,
+    reply: () => "Върна се в разговора",
+    date: () => `Въпросът е преместен за ${fmtShort(l.d)}`,
+    move: () => `Преместен в ${ST[l.s] ? ST[l.s].name : l.s}${l.d ? ", пиши на " + fmtShort(l.d) : ""}`,
+    back: () => `Върнат в ${ST[l.s] ? ST[l.s].name : l.s}`
+  }[l.a] || (() => l.a))();
+
+  const src = c.fu_source || "";
+  $("#sheetBody").innerHTML = `<div class="grab"></div>
+    <div class="sheet-h"><div><h2 id="sheetTitle">${esc(c.name)}</h2>
+      <div class="sheet-sub">${stageChip(c)}${c.fu_network ? `<span class="chip">${esc(NET[c.fu_network])}</span>` : ""}</div></div>
+      <button class="btn icon ghost" type="button" data-act="close" aria-label="Затвори">${I.x}</button></div>
+    ${c.info || url ? `<div class="contact">${url ? `<a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">${I.link}${openLabel(c)}</a>` : ""}
+      ${c.info && !/^https?:/i.test(c.info) ? `<span class="info">${esc(c.info)}</span><button class="btn small ghost" type="button" data-act="copyinfo">${I.copy}Копирай</button>` : ""}</div>` : ""}
+    ${steps}
+    ${fu}
+    ${moves}
+    ${sec("Детайли", `<div class="field"><span class="label">Откъде е дошъл</span><div class="seg" role="group">
+      ${SOURCES.map(s => `<label><input type="radio" name="src" value="${esc(s)}" ${s === src ? "checked" : ""} data-act="source" data-id="${c.id}"><span>${esc(s)}</span></label>`).join("")}</div></div>
+      <label class="field"><span>Бележки</span><textarea id="noteEdit" placeholder="Какво каза, какво го интересува, възражения">${esc(c.note)}</textarea></label>`)}
+    ${c.fu_log.length ? `<details class="csec"><summary class="csec-h">История<span class="csec-tag">${c.fu_log.length}</span></summary>
+      <ul class="history">${c.fu_log.slice().reverse().slice(0, 30).map(l => `<li><time>${new Date(l.t).toLocaleDateString("bg-BG", { day: "2-digit", month: "2-digit" })}</time><span>${esc(logText(l))}</span></li>`).join("")}</ul></details>` : ""}
+    <details class="csec"><summary class="csec-h">Редактирай контакта</summary>
+      <form id="editForm" class="stack">
+        <label class="field"><span>Име</span><input name="name" required value="${esc(c.name)}"></label>
+        <div class="field"><span class="label">Социална мрежа</span>${seg("net", NETWORKS, c.fu_network || "")}</div>
+        <label class="field"><span>Профил, линк или телефон</span><input name="info" value="${esc(c.info)}" placeholder="${(INFO_HINT[c.fu_network] || INFO_HINT.instagram)[0]}"><small class="hint">${(INFO_HINT[c.fu_network] || INFO_HINT.instagram)[1]}</small></label>
+        <button class="btn primary" type="submit">Запази</button>
+      </form>
+      ${state.confirmDel
+        ? `<div class="confirm"><b>Да изтрия ли ${esc(c.name)}? Контактът изчезва и от AKTIV90.</b><div class="actions"><button class="btn danger" type="button" data-act="delete" data-id="${c.id}">Изтрий</button><button class="btn" type="button" data-act="nodel">Откажи</button></div></div>`
+        : `<button class="btn ghost" type="button" data-act="askdel" style="color:var(--warn);justify-self:start">Изтрий контакта</button>`}
+    </details>`;
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg, undo) {
+  const host = $("#toastHost");
+  host.innerHTML = `<div class="toast"><span>${esc(msg)}</span>${undo ? `<button type="button" id="undoBtn">Върни</button>` : ""}</div>`;
+  if (undo) $("#undoBtn").onclick = () => { undo(); host.innerHTML = ""; };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { host.innerHTML = ""; }, 4500);
+}
+function act(id, fn) {
+  const before = Data.get(id);
+  if (!before) return;
+  const c = clone(before);
+  const msg = fn(c);
+  state.pick = null;
+  Data.save(c);
+  toast(msg, () => Data.save(before));
+}
+
+function gcalUrl(time) {
+  const [h, m] = (time || "09:00").split(":");
+  const d = addDays(today(), 1).replace(/-/g, "");
+  const end = new Date(2000, 0, 1, +h, +m + 15);
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Sofia";
+  const link = /^https?:/.test(location.protocol) ? location.origin + location.pathname : "";
+  const qs = new URLSearchParams({ action: "TEMPLATE", text: "Follow up за днес", details: "Отвори Follow Up и виж на кого да пишеш днес." + (link ? "\n" + link : ""),
+    dates: `${d}T${h}${m}00/${d}T${pad(end.getHours())}${pad(end.getMinutes())}00`, recur: "RRULE:FREQ=DAILY", ctz: tz });
+  return "https://calendar.google.com/calendar/render?" + qs;
+}
+function copy(text) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => toast("Копирано.")).catch(() => toast("Не успях да копирам. Задръж върху текста, за да го маркираш."));
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click", e => {
+  const tab = e.target.closest("[data-tab]");
+  if (tab) { state.tab = tab.dataset.tab; render(); window.scrollTo(0, 0); return; }
+  const el = e.target.closest("[data-act]");
+  if (!el || el.tagName === "INPUT") return;
+  const id = el.dataset.id;
+  switch (el.dataset.act) {
+    case "add": openSheet("add"); break;
+    case "close": closeSheet(); break;
+    case "open": openSheet("contact", id); break;
+    case "assign": act(id, c => A.assign(c, el.dataset.v)); break;
+    case "send": act(id, A.send); break;
+    case "replied": act(id, A.replied); break;
+    case "jump": { const t = document.getElementById(el.dataset.v); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); break; }
+    case "box": state.box = state.box === el.dataset.v ? null : el.dataset.v; render(); break;
+    case "forward": act(id, A.forward); break;
+    case "back": act(id, A.back); break;
+    case "toBox": act(id, c => A.toBox(c, el.dataset.v)); break;
+    case "date": act(id, c => A.reschedule(c, el.dataset.d)); break;
+    case "snooze": act(id, c => A.snooze(c, 1)); break;
+    case "snoozeOther": openSheet("contact", id); state.pick = "date"; renderContact(); { const p = document.querySelector("#sheet .pick"); if (p) p.scrollIntoView({ block: "center" }); } break;
+    case "park": act(id, c => A.toBox(c, "later", el.dataset.d)); break;
+    case "laterDate": act(id, c => A.reschedule(c, el.dataset.d)); break;
+    case "pick": state.pick = state.pick === el.dataset.v ? null : el.dataset.v; renderContact(); break;
+    case "sel": state.sel = state.sel === el.dataset.v ? null : el.dataset.v; render(); break;
+    case "askdel": state.confirmDel = true; renderContact(); break;
+    case "nodel": state.confirmDel = false; renderContact(); break;
+    case "delete": Data.remove(id).then(ok => { if (ok) { closeSheet(); toast("Контактът е изтрит."); } }); break;
+    case "copyscript": copy(($("#script") || {}).textContent); break;
+    case "copyinfo": { const c = Data.get(state.openId); copy(c && c.info); break; }
+    case "logout": sb.auth.signOut(); break;
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.pickact && t.value) {
+    const id = state.openId, d = t.value, a = t.dataset.pickact;
+    act(id, c => a === "park" ? A.toBox(c, "later", d) : A.reschedule(c, d));
+  }
+  if (t.dataset.act === "source") act(t.dataset.id, c => { c.fu_source = t.value; return `Източник: ${t.value}.`; });
+  if (t.name === "net" && t.closest("#addForm, #editForm")) {
+    const h = INFO_HINT[t.value]; const form = t.closest("form");
+    const inp = form.querySelector("input[name=info]"); if (inp && h) inp.placeholder = h[0];
+    const hint = form.querySelector(".hint"); if (hint && h) hint.textContent = h[1];
+  }
+  if (t.id === "remindAt") { try { localStorage.setItem("fu-remind", t.value); } catch {} const a = $("#gcal"); if (a) a.href = gcalUrl(t.value); }
+});
+document.addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  if (e.target.id === "addForm") {
+    if (!f.name.trim()) return;
+    const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
+    const c = await Data.add({ name: f.name.trim(), info: (f.info || "").trim(), fu_network: f.net, fu_stage: f.stage, fu_source: f.source });
+    btn.disabled = false;
+    if (c) { closeSheet(); toast(`${c.name} е в ${ST[c.fu_stage].name}.`); }
+  } else if (e.target.id === "editForm") {
+    const c = Data.get(state.openId);
+    if (!c || !f.name.trim()) return;
+    Object.assign(c, { name: f.name.trim(), fu_network: f.net || null, info: (f.info || "").trim() });
+    Data.save(c); toast("Запазено.");
+  } else if (e.target.id === "authForm") {
+    authSubmit(f, e.target);
+  }
+});
+/* Remember which Today blocks are folded (per device). */
+try { const v = JSON.parse(localStorage.getItem("fu-fold") || "{}"); state.closed = new Set(v.closed || []); state.opened = new Set(v.opened || []); } catch {}
+document.addEventListener("toggle", e => {
+  const d = e.target;
+  if (!d.classList || !d.classList.contains("block") || !d.id) return;
+  const byDefaultClosed = d.id === "b-talk";
+  if (byDefaultClosed) d.open ? state.opened.add(d.id) : state.opened.delete(d.id);
+  else d.open ? state.closed.delete(d.id) : state.closed.add(d.id);
+  try { localStorage.setItem("fu-fold", JSON.stringify({ closed: [...state.closed], opened: [...state.opened] })); } catch {}
+}, true);
+
+let noteTimer;
+document.addEventListener("input", e => {
+  if (e.target.id === "q") { state.q = e.target.value; render(); }
+  if (e.target.id === "noteEdit") {
+    const id = state.openId, val = e.target.value;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { const c = Data.get(id); if (c && c.note !== val) { c.note = val; Data.save(c); } }, 800);
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Data.user) Data.load(); });
+
+/* ---------- Auth (same accounts as AKTIV90) ---------- */
+const auth = { mode: "login", msg: "", err: false, busy: false };
+function renderAuth() {
+  const m = auth.mode;
+  $("#authScreen").innerHTML = `<div class="wrap auth"><div class="box">
+    <div><h1>Follow <span>Up</span></h1><p>Подреди фолоуъпите си: Prospect → Interested → Close. Влизаш със същия акаунт като в AKTIV90.</p></div>
+    ${m !== "reset" ? `<div class="switch"><button type="button" data-auth="login" aria-pressed="${m === "login"}">Вход</button><button type="button" data-auth="signup" aria-pressed="${m === "signup"}">Нов акаунт</button></div>` : ""}
+    <form id="authForm">
+      ${m === "signup" ? `<label class="field"><span>Име</span><input name="name" required autocomplete="name"></label>` : ""}
+      <label class="field"><span>Имейл</span><input name="email" type="email" required autocomplete="email"></label>
+      ${m !== "reset" ? `<label class="field"><span>Парола</span><input name="password" type="password" required minlength="6" autocomplete="${m === "signup" ? "new-password" : "current-password"}"></label>` : ""}
+      ${auth.msg ? `<div class="msg ${auth.err ? "err" : ""}">${esc(auth.msg)}</div>` : ""}
+      <button class="btn primary big" type="submit" ${auth.busy ? "disabled" : ""}>${m === "login" ? "Влез" : m === "signup" ? "Създай акаунт" : "Прати линк за нова парола"}</button>
+      ${m === "login" ? `<button class="linkish" type="button" data-auth="reset">Забравена парола</button>` : ""}
+      ${m === "reset" ? `<button class="linkish" type="button" data-auth="login">Назад към вход</button>` : ""}
+    </form></div></div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-auth]");
+  if (b) { Object.assign(auth, { mode: b.dataset.auth, msg: "", err: false }); renderAuth(); }
+});
+async function authSubmit(f) {
+  Object.assign(auth, { busy: true, msg: "", err: false }); renderAuth();
+  let res;
+  if (auth.mode === "login") {
+    res = await sb.auth.signInWithPassword({ email: f.email, password: f.password });
+    if (res.error) Object.assign(auth, { msg: "Грешен имейл или парола.", err: true });
+  } else if (auth.mode === "signup") {
+    res = await sb.auth.signUp({ email: f.email, password: f.password, options: { data: { name: f.name } } });
+    if (res.error) Object.assign(auth, { msg: /registered/i.test(res.error.message) ? "Този имейл вече има акаунт. Влез с него." : "Акаунтът не се създаде: " + res.error.message, err: true });
+    else if (!res.data.session) Object.assign(auth, { mode: "login", msg: "Пратихме ти имейл. Потвърди адреса и после влез." });
+  } else {
+    res = await sb.auth.resetPasswordForEmail(f.email, { redirectTo: location.origin + location.pathname });
+    Object.assign(auth, res.error ? { msg: "Не успях да пратя имейла. Опитай пак.", err: true } : { msg: "Пратихме ти линк за нова парола.", mode: "login" });
+  }
+  auth.busy = false;
+  if (!Data.user) renderAuth();
+}
+
+function showApp(user) {
+  Data.user = user;
+  $("#authScreen").hidden = true; $("#appScreen").hidden = false;
+  render();
+  Data.load();
+}
+function showAuth() {
+  Data.user = null; Data.list = []; Data.loaded = false;
+  closeSheet();
+  $("#appScreen").hidden = true; $("#authScreen").hidden = false;
+  renderAuth();
+}
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") { setTimeout(newPasswordPrompt, 0); }
+  if (session && session.user) { if (!Data.user || Data.user.id !== session.user.id) showApp(session.user); }
+  else showAuth();
+});
+function newPasswordPrompt() {
+  $("#sheetBody").innerHTML = `<div class="grab"></div><div class="sheet-h"><h2 id="sheetTitle">Нова парола</h2></div>
+    <form id="pwForm" class="stack"><label class="field"><span>Нова парола</span><input name="pw" type="password" minlength="6" required autocomplete="new-password"></label>
+    <button class="btn primary big" type="submit">Запази паролата</button></form>`;
+  sheet.showModal();
+  $("#pwForm").onsubmit = async e => {
+    e.preventDefault(); e.stopPropagation();
+    const { error } = await sb.auth.updateUser({ password: new FormData(e.target).get("pw") });
+    if (error) toast("Паролата не се смени."); else { closeSheet(); toast("Паролата е сменена."); }
+  };
+}
+
+/* New day while the app stays open: refresh lists. */
+let lastDay = today();
+setInterval(() => { if (lastDay !== today()) { lastDay = today(); render(); } }, 60000);
+
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

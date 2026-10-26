@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AKTIV90 — нов контакт с Follow Up</title>
+<style>
+/* Макет: как изглежда формата „Нов контакт“ в AKTIV90 с трите незадължителни избора за Follow Up. */
+:root { --bg: #f3efe8; --card: #ffffff; --field: #f1ece4; --field-line: #e6dfd3; --green: #2e9d63; --green-ink: #1f7a4a; --purple: #5b2d7a; --muted: #7a7064; --ink: #2b2620; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--ink); padding: 16px; }
+.card { background: var(--card); border-radius: 18px; padding: 18px 20px 20px; display: grid; gap: 14px; max-width: 1480px; }
+.h { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: .08em; color: var(--green-ink); font-size: 15px; }
+.h svg { width: 16px; height: 16px; fill: var(--purple); }
+.row { display: grid; grid-template-columns: 1fr 1.25fr 60px; gap: 12px; }
+.in { background: var(--field); border: 1px solid var(--field-line); border-radius: 14px; height: 58px; display: flex; align-items: center; padding: 0 16px; font-size: 17px; color: #b3a995; }
+.in.val { color: var(--ink); }
+.plus { background: var(--green); border-radius: 14px; display: grid; place-items: center; color: #fff; font-size: 30px; font-weight: 700; box-shadow: 0 4px 10px rgba(46,157,99,.3); }
+.fu { border-top: 1px dashed var(--field-line); padding-top: 14px; display: grid; gap: 12px; }
+.fu-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; white-space: nowrap; font-size: 13px; font-weight: 800; letter-spacing: .06em; color: var(--green-ink); }
+.fu-h span { font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.grp { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: center; }
+.grp b { font-size: 14px; color: var(--muted); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--field-line); background: var(--field); border-radius: 999px; padding: 7px 14px; font-size: 14px; }
+.chip.on { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+.note { font-size: 14px; color: var(--muted); }
+.new { display: inline-block; background: #fdf2c4; color: #6b5300; border-radius: 6px; padding: 1px 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; margin-left: 6px; }
+@media (max-width: 600px) {
+  .row { grid-template-columns: 1fr 56px; }
+  .row .in:first-child { grid-column: 1 / -1; }
+  .grp { grid-template-columns: 1fr; gap: 6px; }
+}
+</style></head>
+<body>
+<div class="card">
+  <div class="h"><svg viewBox="0 0 16 16"><circle cx="8" cy="4.5" r="3.5"/><path d="M1.5 15.5c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6z"/></svg>НОВ КОНТАКТ</div>
+  <div class="row">
+    <div class="in val">Мария Петрова</div>
+    <div class="in val">@maria.p</div>
+    <div class="plus">+</div>
+  </div>
+  <div class="fu">
+    <div class="fu-h">ЗА FOLLOW UP <span>по желание, може да ги пропуснеш</span><i class="new">НОВО</i></div>
+    <div class="grp"><b>Стъпало</b><div class="chips"><span class="chip on">Prospect</span><span class="chip">Interested</span><span class="chip">Close</span></div></div>
+    <div class="grp"><b>Мрежа</b><div class="chips"><span class="chip on">Instagram</span><span class="chip">TikTok</span><span class="chip">Facebook</span><span class="chip">Viber</span><span class="chip">На живо</span></div></div>
+    <div class="grp"><b>Откъде е дошъл</b><div class="chips"><span class="chip">Социални мрежи</span><span class="chip">Реклама</span><span class="chip">Събитие</span><span class="chip">Познат</span><span class="chip on">Препоръка</span><span class="chip">Друго</span></div></div>
+  </div>
+  <div class="note">Запиши всеки нов човек тук. Под името светни всеки етап, щом го свършиш — може повече от един.</div>
+</div>
+</body></html>
