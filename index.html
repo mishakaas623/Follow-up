@@ -287,6 +287,7 @@ details.more[open] summary { margin-bottom: 10px; }
 </head>
 <body>
 
+<div id="splash" class="wrap auth"><div class="box" id="splashBox"></div></div>
 <div id="authScreen" hidden></div>
 
 <div id="appScreen" hidden>
@@ -1044,6 +1045,8 @@ async function authSubmit(f) {
 
 function showApp(user) {
   Data.user = user;
+  $("#splash").hidden = true;
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch {}
   $("#authScreen").hidden = true; $("#appScreen").hidden = false;
   render();
   Data.load();
@@ -1052,15 +1055,19 @@ function showAuth() {
   Data.user = null; Data.list = []; Data.loaded = false;
   if (auth.mode === "signup" && !auth.msg) auth.mode = "login";
   closeSheet();
+  $("#splash").hidden = true;
   $("#appScreen").hidden = true; $("#authScreen").hidden = false;
   renderAuth();
 }
-/* AKTIV90 account wins if both are signed in. */
+/* AKTIV90 account wins if both are signed in. The login form shows only after every
+   account system has answered: a saved login can take a moment to renew after a pause. */
+$("#splashBox").innerHTML = `${ladderArt()}<div><h1>Follow <span>Up</span></h1><p>Зареждам…</p></div>`;
 const sessions = { a: null, f: null };
+const ready = { a: false, f: !sbF };
 function pickSession() {
   const client = sessions.a ? sbA : sessions.f ? sbF : null;
   const session = sessions.a || sessions.f;
-  if (!client) { showAuth(); return; }
+  if (!client) { if (ready.a && ready.f) showAuth(); return; }
   if (sb !== client) { sb = client; Data.user = null; }
   if (!Data.user || Data.user.id !== session.user.id) showApp(session.user);
 }
@@ -1069,6 +1076,7 @@ function pickSession() {
   client.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY") { sb = client; setTimeout(newPasswordPrompt, 0); }
     sessions[key] = session && session.user ? session : null;
+    ready[key] = true;
     pickSession();
   });
 });
