@@ -266,8 +266,6 @@ details.more[open] summary { margin-bottom: 10px; }
 /* Auth */
 .auth { min-height: 100%; display: grid; align-content: center; padding-block: 32px; }
 .auth .box { max-width: 420px; width: 100%; margin: 0 auto; display: grid; gap: 18px; }
-.art { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; font-family: var(--font-body); }
-.empty .art { max-width: 300px; margin-bottom: 4px; }
 .auth h1 { margin: 0; font-family: var(--font-display); font-size: 26px; }
 .auth h1 span { color: var(--accent); }
 .auth p { margin: 0; color: var(--muted); }
@@ -613,33 +611,11 @@ function block(id, title, color, items, kind, note, closedByDefault) {
 }
 const loading = () => `<div class="view"><div class="note-box">Зареждам контактите ти…</div></div>`;
 
-/* Start-screen picture: the ladder Prospect → Interested → Close → клиент, drawn with the stage colors. */
-function ladderArt() {
-  const steps = [["Prospect", "var(--st-prospect)"], ["Interested", "var(--st-interested)"], ["Close", "var(--st-close)"]];
-  const bars = steps.map(([name, col], i) => {
-    const x = 8 + i * 88, h = 54 + i * 42, y = 190 - h;
-    return `<rect x="${x}" y="${y}" width="80" height="${h}" rx="12" fill="${col}"/>
-      <text x="${x + 40}" y="${y + 25}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--art-ink)">${name}</text>
-      <text x="${x + 40}" y="${y + 42}" text-anchor="middle" font-size="11" fill="var(--art-ink)" opacity=".85">стъпка ${i + 1}</text>`;
-  }).join("");
-  const arc = (d) => `<path d="${d}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 5" stroke-linecap="round"/>`;
-  return `<svg class="art" viewBox="0 0 340 214" role="img" aria-label="Стълбица: Prospect, Interested, Close, клиент">
-    <rect x="2" y="190" width="336" height="4" rx="2" fill="var(--line)"/>
-    ${bars}
-    ${arc("M48 124 C 64 106, 80 96, 106 86")}
-    ${arc("M136 82 C 152 64, 168 54, 194 44")}
-    ${arc("M224 40 C 240 26, 262 24, 284 34")}
-    <circle cx="306" cy="52" r="20" fill="var(--st-client)"/>
-    <path d="M296 52.5 l7 7 L316 45.5" fill="none" stroke="var(--art-ink)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="306" y="92" text-anchor="middle" font-size="12" font-weight="700" fill="var(--st-client)">Клиент</text>
-  </svg>`;
-}
-
 function renderToday() {
   if (!Data.loaded) return loading();
   const g = groups();
   if (!Data.list.length) {
-    return `<div class="view"><div class="empty">${ladderArt()}<h3>Тук всеки ден ще виждаш кого да попиташ и на кого да пишеш</h3>
+    return `<div class="view"><div class="empty"><h3>Тук всеки ден ще виждаш кого да попиташ и на кого да пишеш</h3>
       <p>Добави контакт. Когато спре да ти отговаря и му пратиш 1-ви follow up, отбележи го. На следващия ден приложението ще те пита дали се е върнал в разговора.</p>
       <button class="btn primary" type="button" data-act="add">Добави контакт</button></div></div>`;
   }
@@ -1004,7 +980,6 @@ const auth = { mode: "login", msg: "", err: false, busy: false };
 function renderAuth() {
   const m = auth.mode;
   $("#authScreen").innerHTML = `<div class="wrap auth"><div class="box">
-    ${ladderArt()}
     <div><h1>Follow <span>Up</span></h1><p>Подреди фолоуъпите си: Prospect → Interested → Close. Ако имаш акаунт в AKTIV90, влез с него.</p></div>
     ${m !== "reset" && sbF ? `<div class="switch"><button type="button" data-auth="login" aria-pressed="${m === "login"}">Вход</button><button type="button" data-auth="signup" aria-pressed="${m === "signup"}">Нов акаунт</button></div>` : ""}
     <form id="authForm">
@@ -1061,7 +1036,7 @@ function showAuth() {
 }
 /* AKTIV90 account wins if both are signed in. The login form shows only after every
    account system has answered: a saved login can take a moment to renew after a pause. */
-$("#splashBox").innerHTML = `${ladderArt()}<div><h1>Follow <span>Up</span></h1><p>Зареждам…</p></div>`;
+$("#splashBox").innerHTML = `<div><h1>Follow <span>Up</span></h1><p>Зареждам…</p></div>`;
 const sessions = { a: null, f: null };
 const ready = { a: false, f: !sbF };
 function pickSession() {
